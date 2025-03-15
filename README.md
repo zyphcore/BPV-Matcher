@@ -1,4 +1,4 @@
-# Hulp met github :)
+# Hulp met github :D
 
 ## 1. **Een Repository Instellen**
 
