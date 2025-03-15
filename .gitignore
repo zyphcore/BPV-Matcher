@@ -1,0 +1,3 @@
+bpv/
+__pycache__/
+*.sqlite3
