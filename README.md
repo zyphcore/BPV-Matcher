@@ -4,23 +4,9 @@
 
 ### Stap 1: Clone de Repository
 
-Als je een bestaande repository wilt gebruiken, kun je deze klonen naar je lokale machine. Dit doe je door de volgende opdracht in je terminal in te voeren:
-
 ```bash
-git clone https://github.com/jouw-gebruikersnaam/naam-van-de-repo.git
+git clone https://github.com/zyphcore/BPV-Matcher.git
 ```
-
-Vervang `jouw-gebruikersnaam` en `naam-van-de-repo` met de juiste informatie van de repository.
-
-### Stap 2: Initialiseer Git (indien nodig)
-
-Als je een nieuwe directory hebt zonder een Git-repository, kun je deze initialiseren met de volgende opdracht:
-
-```bash
-git init
-```
-
-Dit maakt een nieuwe Git-repository aan in je map.
 
 ## 2. **Werken met Git**
 
