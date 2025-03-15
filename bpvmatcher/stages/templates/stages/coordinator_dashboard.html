@@ -1,0 +1,8 @@
+{% extends 'stages/base.html' %}
+
+{% block content %}
+  <h2>Coördinator Dashboard</h2>
+  <p>Welkom, {{ coordinator.user.username }}!</p>
+  <a href="{% url 'stage_toevoegen' %}">Stage Toevoegen</a>
+  <a href="{% url 'bedrijf_toevoegen' %}">Bedrijf Toevoegen</a>
+  {% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'stages/base.html' %}
+
+    {% block content %}
+      <h1>Stageoverzicht</h1>
+      <ul>
+        {% for stage in stages %}
+          <li>
+            <a href="{% url 'stage_detail' stage.id %}">{{ stage.titel }}</a> - {{ stage.bedrijf.naam }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endblock %}

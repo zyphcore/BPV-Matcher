@@ -1,0 +1,8 @@
+{% extends 'stages/base.html' %}
+
+{% block content %}
+  <h2>Profiel van {{ student.user.username }}</h2>
+  <p>Programmeertalen: {{ student.programmeertalen }}</p>
+  <p>Werkvoorkeuren: {{ student.werkvoorkeuren }}</p>
+  <a href="{% url 'student_profiel_bewerken' %}">Profiel Bewerken</a>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'stages/base.html' %}
+
+    {% block content %}
+      <h2>Mentor Dashboard</h2>
+      <p>Welkom, {{ mentor.user.username }}!</p>
+
+      <h3>Toegewezen Studenten</h3>
+      <ul>
+        {% for student in mentor.studenten.all %}
+          <li><a href="{% url 'student_profiel' student.id %}">{{ student.user.username }}</a></li>
+        {% endfor %}
+      </ul>
+
+      <h3>Stageplaatsen van Studenten</h3>
+      <ul>
+        {% for stage in stages %}
+          <li><a href="{% url 'stage_detail' stage.id %}">{{ stage.titel }}</a></li>
+        {% endfor %}
+      </ul>
+
+      <h3>Feedback van Studenten</h3>
+      <ul>
+        {% for feedback in feedback_lijst %}
+          <li>
+            <a href="{% url 'student_profiel' feedback.student.id %}">{{ feedback.student.user.username }}</a> -
+            <a href="{% url 'stage_detail' feedback.stage.id %}">{{ feedback.stage.titel }}</a>:
+            Beoordeling: {{ feedback.beoordeling }}, Opmerkingen: {{ feedback.opmerkingen }}
+          </li>
+        {% endfor %}
+      </ul>
+
+      <a href="{% url 'stage_lijst' %}">Alle Stageplaatsen</a>
+    {% endblock %}

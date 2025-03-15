@@ -1,0 +1,9 @@
+{% extends 'stages/base.html' %}
+{% block title %}Stage Details{% endblock %}
+{% block content %}
+    <h1>{{ stage.titel }}</h1>
+    <p>Bedrijf: <a href="{% url 'bedrijf_detail' stage.bedrijf.id %}">{{ stage.bedrijf.naam }}</a></p>
+    <p>Omschrijving: {{ stage.omschrijving }}</p>
+    <p>Technologieën: {{ stage.technologieen }}</p>
+    <a href="{% url 'stage_benaderen' stage.id %}" class="btn btn-primary">Benaderen</a>
+{% endblock %}

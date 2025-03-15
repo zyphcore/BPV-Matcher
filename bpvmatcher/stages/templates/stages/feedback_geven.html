@@ -1,0 +1,17 @@
+{% extends 'stages/base.html' %}
+{% block title %}Feedback Geven{% endblock %}
+{% block content %}
+    <h1>Feedback geven over {{ stage.titel }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="beoordeling" class="form-label">Beoordeling (1-5)</label>
+            <input type="number" name="beoordeling" id="beoordeling" min="1" max="5" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="opmerkingen" class="form-label">Opmerkingen</label>
+            <textarea name="opmerkingen" id="opmerkingen" class="form-control"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Versturen</button>
+    </form>
+{% endblock %}
