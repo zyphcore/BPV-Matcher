@@ -1,0 +1,12 @@
+{% extends 'stages/base.html' %}
+
+    {% block content %}
+      <h1>Bedfrijf overzicht</h1>
+      <ul>
+        {% for bedrijf in bedrijfs %}
+          <li>
+            <a href="{% url 'bedrijf_detail' bedrijf.id %}">{{ bedrijf.titel }}</a> - {{ bedrijf.naam }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endblock %}

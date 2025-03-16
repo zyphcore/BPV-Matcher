@@ -121,6 +121,11 @@ def stage_toevoegen(request):
         return render(request, 'stages/stage_toevoegen.html', {'form': form})
     else:
         return redirect('stage_lijst')
+    
+@login_required
+def bedrijf_lijst(request):
+    bedrijven = Bedrijf.objects.all() # Zorg dat Bedrijf geimporteerd is.
+    return render(request, 'stages/bedrijf_lijst.html', {'bedrijven': bedrijven})
 
 @login_required
 def bedrijf_toevoegen(request):
@@ -139,19 +144,32 @@ def bedrijf_toevoegen(request):
 
 # Mentor views
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Mentor, Stage, Feedback
+
 @login_required
 def mentor_dashboard(request):
     """Dashboard voor de mentor."""
     if hasattr(request.user, 'mentor'):
         mentor = request.user.mentor
         studenten = mentor.studenten.all()
+
         stages = Stage.objects.filter(benadering__student__in=studenten).distinct()
+
         feedback_lijst = Feedback.objects.filter(student__in=studenten)
-        return render(request, 'stages/mentor_dashboard.html', {
+
+        print(f"Studenten: {studenten}")
+        print(f"Stages: {stages}")
+        print(f"Feedback: {feedback_lijst}")
+
+        context = {
             'mentor': mentor,
+            'studenten': studenten,
             'stages': stages,
             'feedback_lijst': feedback_lijst,
-        })
+        }
+        return render(request, 'stages/mentor_dashboard.html', context)
     else:
         return redirect('home')
 

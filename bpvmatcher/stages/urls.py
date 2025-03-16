@@ -16,7 +16,7 @@ urlpatterns = [
     path('stages/toevoegen/', views.stage_toevoegen, name='stage_toevoegen'),
     path('bedrijven/toevoegen/', views.bedrijf_toevoegen, name='bedrijf_toevoegen'),
     path('profiel/bewerken/', views.student_profiel_bewerken, name='student_profiel_bewerken'),
-
+    path('bedrijven/', views.bedrijf_lijst, name='bedrijf_lijst'), 
 
     # Coördinator URLs
     path('coordinator/', views.coordinator_dashboard, name='coordinator_dashboard'),
@@ -28,5 +28,4 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('accounts/register/', views.register, name='register'),
-
 ]

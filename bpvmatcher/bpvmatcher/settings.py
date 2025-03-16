@@ -124,4 +124,4 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGOUT_REDIRECT_URL = 'home'  # Of een andere pagina waar je naartoe wilt
-LOGIN_REDIRECT_URL = 'student_profiel'
+LOGIN_REDIRECT_URL = 'stage_lijst'
