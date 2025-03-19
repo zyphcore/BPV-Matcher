@@ -46,8 +46,14 @@ def home(request):
 @login_required
 def student_profiel(request):
     """Profielpagina van de student."""
-    student = Student.objects.get(user=request.user)
-    return render(request, 'stages/student_profiel.html', {'student': student})
+    try:
+        student = Student.objects.get(user=request.user)
+        return render(request, 'stages/student_profiel.html', {'student': student})
+    except Student.DoesNotExist:
+        if request.user.is_superuser:
+            student = Student.objects.create(user=request.user)
+            return render(request, 'stages/student_profiel.html', {'student': student})
+        return redirect('home')
 
 @login_required
 def student_profiel_bewerken(request):
