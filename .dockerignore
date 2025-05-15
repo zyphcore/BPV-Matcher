@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Binaries and build artifacts
+/bin
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Environment and configuration
+.env
+*.env
+
+# Golang specific
+/vendor/
+/go.work
+
+# Editor directories and files
+.idea
+.vscode
+*.swp
+*.swo
+
+# Misc
+*.log
+README.md
+*.md
+LICENSE 

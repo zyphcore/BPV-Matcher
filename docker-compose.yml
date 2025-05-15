@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: bpv-matcher-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=bpvmatcher
+      - JWT_SECRET=docker-secret-key-change-in-production
+      - SERVER_PORT=8080
+      - ENVIRONMENT=development
+      - ALLOWED_ORIGINS=*
+    restart: unless-stopped
+    networks:
+      - bpv-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: bpv-matcher-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=bpvmatcher
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - bpv-network
+
+networks:
+  bpv-network:
+    driver: bridge
+
+volumes:
+  postgres_data: 
