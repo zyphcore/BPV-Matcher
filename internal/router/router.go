@@ -9,49 +9,37 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// NewRouter creates and configures a new router
 func NewRouter() *gin.Engine {
-	// Load application configuration
 	appConfig := config.LoadConfig()
 
-	// Set Gin mode based on environment
 	if appConfig.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// Initialize router
 	router := gin.Default()
 
-	// Configure CORS
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{appConfig.AllowedOrigins}
 	corsConfig.AllowCredentials = true
 	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 
-	// Create JWT configuration
 	jwtConfig := middleware.JWTConfig{
 		SecretKey:     appConfig.JWTSecret,
 		TokenDuration: appConfig.JWTExpiration,
 	}
 
-	// Create handlers
 	userHandler := handlers.NewUserHandler(jwtConfig)
 	adminHandler := handlers.NewAdminHandler()
 
-	// Public routes
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "BPV-Matcher API"})
-	})
+	router.GET("/health", handlers.HealthCheck)
 
-	// Auth routes
 	auth := router.Group("/api/auth")
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
 	}
 
-	// User routes (protected)
 	user := router.Group("/api/user")
 	user.Use(middleware.AuthMiddleware(jwtConfig))
 	{
@@ -60,7 +48,6 @@ func NewRouter() *gin.Engine {
 		user.POST("/change-password", userHandler.ChangePassword)
 	}
 
-	// Admin routes (protected + admin only)
 	admin := router.Group("/api/admin")
 	admin.Use(middleware.AuthMiddleware(jwtConfig), middleware.AdminMiddleware())
 	{
