@@ -19,9 +19,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /app/backend ./cmd/backend
 # Final stage
 FROM alpine:latest
 
-# Add ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates
-
 # Create a non-root user and group
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
