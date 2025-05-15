@@ -49,20 +49,57 @@ func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	if updateData.Role != "user" && updateData.Role != "admin" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid role"})
+	// Validate the role
+	validRoles := map[string]bool{
+		"student":     true,
+		"coordinator": true,
+		"mentor":      true,
+	}
+
+	if !validRoles[updateData.Role] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid role. Must be student, coordinator, or mentor."})
 		return
 	}
 
-	result := database.GetDB().Model(&models.User{}).Where("id = ?", userID).Update("role", updateData.Role)
+	var user models.User
+	result := database.GetDB().First(&user, userID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Store the old role for comparison
+	oldRole := user.Role
+
+	// Update the user's role
+	result = database.GetDB().Model(&user).Update("role", updateData.Role)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role"})
 		return
 	}
 
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
+	// Create role-specific profile if it doesn't exist
+	if oldRole != updateData.Role {
+		switch updateData.Role {
+		case "student":
+			var student models.Student
+			if database.GetDB().Where("user_id = ?", userID).First(&student).Error != nil {
+				student = models.Student{UserID: uint(userID)}
+				database.GetDB().Create(&student)
+			}
+		case "coordinator":
+			var coordinator models.Coordinator
+			if database.GetDB().Where("user_id = ?", userID).First(&coordinator).Error != nil {
+				coordinator = models.Coordinator{UserID: uint(userID)}
+				database.GetDB().Create(&coordinator)
+			}
+		case "mentor":
+			var mentor models.Mentor
+			if database.GetDB().Where("user_id = ?", userID).First(&mentor).Error != nil {
+				mentor = models.Mentor{UserID: uint(userID)}
+				database.GetDB().Create(&mentor)
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
@@ -120,21 +157,41 @@ func (h *AdminHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	result := database.GetDB().Delete(&models.User{}, userID)
+	// Begin a transaction to ensure all related records are deleted
+	tx := database.GetDB().Begin()
+
+	// Delete role-specific profile if it exists
+	var user models.User
+	if tx.First(&user, userID).Error == nil {
+		switch user.Role {
+		case "student":
+			tx.Where("user_id = ?", userID).Delete(&models.Student{})
+		case "coordinator":
+			tx.Where("user_id = ?", userID).Delete(&models.Coordinator{})
+		case "mentor":
+			tx.Where("user_id = ?", userID).Delete(&models.Mentor{})
+		}
+	}
+
+	// Delete the user
+	result := tx.Delete(&models.User{}, userID)
 	if result.Error != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
 
 	if result.RowsAffected == 0 {
+		tx.Rollback()
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
+	tx.Commit()
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
-func (h *AdminHandler) AddAdminPrivileges(c *gin.Context) {
+func (h *AdminHandler) AddCoordinatorPrivileges(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := strconv.ParseUint(userIDStr, 10, 32)
 	if err != nil {
@@ -153,33 +210,34 @@ func (h *AdminHandler) AddAdminPrivileges(c *gin.Context) {
 		return
 	}
 
-	var admin models.Admin
-	result = database.GetDB().Where("user_id = ?", userID).First(&admin)
+	var coordinator models.Coordinator
+	result = database.GetDB().Where("user_id = ?", userID).First(&coordinator)
 	if result.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User already has admin privileges"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User already has coordinator privileges"})
 		return
 	}
 
-	admin = models.Admin{
-		UserID:            uint(userID),
-		AdminLevel:        "standard",
-		CanManageUsers:    true,
-		CanApproveMatches: true,
-		CanEditSettings:   false,
+	coordinator = models.Coordinator{
+		UserID:             uint(userID),
+		Department:         "General",
+		CanConfigSystem:    true,
+		CanManageCompanies: true,
+		CanViewStatistics:  true,
+		CanMonitorStudents: true,
 	}
 
-	result = database.GetDB().Create(&admin)
+	result = database.GetDB().Create(&coordinator)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add admin privileges"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add coordinator privileges"})
 		return
 	}
 
-	database.GetDB().Model(&user).Update("role", "admin")
+	database.GetDB().Model(&user).Update("role", "coordinator")
 
-	c.JSON(http.StatusOK, gin.H{"message": "Admin privileges added successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Coordinator privileges added successfully"})
 }
 
-func (h *AdminHandler) RemoveAdminPrivileges(c *gin.Context) {
+func (h *AdminHandler) AddMentorPrivileges(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := strconv.ParseUint(userIDStr, 10, 32)
 	if err != nil {
@@ -187,18 +245,76 @@ func (h *AdminHandler) RemoveAdminPrivileges(c *gin.Context) {
 		return
 	}
 
-	result := database.GetDB().Where("user_id = ?", userID).Delete(&models.Admin{})
+	var user models.User
+	result := database.GetDB().First(&user, userID)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove admin privileges"})
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user"})
+		}
 		return
 	}
 
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Admin record not found"})
+	var mentor models.Mentor
+	result = database.GetDB().Where("user_id = ?", userID).First(&mentor)
+	if result.RowsAffected > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User already has mentor privileges"})
 		return
 	}
 
-	database.GetDB().Model(&models.User{}).Where("id = ?", userID).Update("role", "user")
+	mentor = models.Mentor{
+		UserID:                    uint(userID),
+		Department:                "General",
+		CanMonitorApplications:    true,
+		CanTrackActivity:          true,
+		CanNotifyInactiveStudents: true,
+	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Admin privileges removed successfully"})
+	result = database.GetDB().Create(&mentor)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add mentor privileges"})
+		return
+	}
+
+	database.GetDB().Model(&user).Update("role", "mentor")
+
+	c.JSON(http.StatusOK, gin.H{"message": "Mentor privileges added successfully"})
+}
+
+func (h *AdminHandler) RemoveSpecialPrivileges(c *gin.Context) {
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseUint(userIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var user models.User
+	result := database.GetDB().First(&user, userID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	switch user.Role {
+	case "coordinator":
+		database.GetDB().Where("user_id = ?", userID).Delete(&models.Coordinator{})
+	case "mentor":
+		database.GetDB().Where("user_id = ?", userID).Delete(&models.Mentor{})
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User does not have special privileges"})
+		return
+	}
+
+	database.GetDB().Model(&user).Update("role", "student")
+
+	// Create student profile if it doesn't exist
+	var student models.Student
+	if database.GetDB().Where("user_id = ?", userID).First(&student).Error != nil {
+		student = models.Student{UserID: uint(userID)}
+		database.GetDB().Create(&student)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Special privileges removed successfully"})
 }

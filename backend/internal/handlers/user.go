@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"backend/internal/database"
 	"backend/internal/middleware"
@@ -22,23 +23,71 @@ func NewUserHandler(jwtConfig middleware.JWTConfig) *UserHandler {
 }
 
 func (h *UserHandler) Register(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var registrationData struct {
+		Email     string `json:"email" binding:"required,email"`
+		Password  string `json:"password" binding:"required,min=8"`
+		FirstName string `json:"firstName" binding:"required"`
+		LastName  string `json:"lastName" binding:"required"`
+		Role      string `json:"role" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&registrationData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Validate role
+	validRoles := map[string]bool{
+		"student":     true,
+		"coordinator": true,
+		"mentor":      true,
+	}
+
+	if !validRoles[registrationData.Role] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid role. Must be student, coordinator, or mentor."})
+		return
+	}
+
 	var existingUser models.User
-	result := database.GetDB().Where("email = ?", user.Email).First(&existingUser)
+	result := database.GetDB().Where("email = ?", registrationData.Email).First(&existingUser)
 	if result.RowsAffected > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already in use"})
 		return
+	}
+
+	user := models.User{
+		Email:     registrationData.Email,
+		Password:  registrationData.Password,
+		FirstName: registrationData.FirstName,
+		LastName:  registrationData.LastName,
+		Role:      registrationData.Role,
+		Active:    true,
+		LastLogin: time.Now(),
 	}
 
 	result = database.GetDB().Create(&user)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
+	}
+
+	// Create role-specific profile
+	switch user.Role {
+	case "student":
+		student := models.Student{
+			UserID: user.ID,
+		}
+		database.GetDB().Create(&student)
+	case "coordinator":
+		coordinator := models.Coordinator{
+			UserID: user.ID,
+		}
+		database.GetDB().Create(&coordinator)
+	case "mentor":
+		mentor := models.Mentor{
+			UserID: user.ID,
+		}
+		database.GetDB().Create(&mentor)
 	}
 
 	user.Password = ""
@@ -69,11 +118,20 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Check if user is active
+	if !user.Active {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Your account has been deactivated. Please contact an administrator."})
+		return
+	}
+
 	token, err := middleware.GenerateToken(user, h.jwtConfig)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
+
+	// Update last login time
+	database.GetDB().Model(&user).Update("last_login", time.Now())
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
@@ -90,6 +148,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	userID, _ := c.Get("userID")
+	role, _ := c.Get("role")
 
 	var user models.User
 	result := database.GetDB().First(&user, userID)
@@ -99,6 +158,25 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	}
 
 	user.Password = ""
+
+	// Get role-specific profile data
+	switch role {
+	case "student":
+		var student models.Student
+		database.GetDB().Where("user_id = ?", userID).First(&student)
+		c.JSON(http.StatusOK, gin.H{"user": user, "studentProfile": student})
+		return
+	case "coordinator":
+		var coordinator models.Coordinator
+		database.GetDB().Where("user_id = ?", userID).First(&coordinator)
+		c.JSON(http.StatusOK, gin.H{"user": user, "coordinatorProfile": coordinator})
+		return
+	case "mentor":
+		var mentor models.Mentor
+		database.GetDB().Where("user_id = ?", userID).First(&mentor)
+		c.JSON(http.StatusOK, gin.H{"user": user, "mentorProfile": mentor})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }

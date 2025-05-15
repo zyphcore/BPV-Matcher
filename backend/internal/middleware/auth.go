@@ -124,3 +124,85 @@ func AdminMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// StudentMiddleware checks if the user has student role
+func StudentMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		if role != "student" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Student access required"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// CoordinatorMiddleware checks if the user has coordinator role
+func CoordinatorMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		if role != "coordinator" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Coordinator access required"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// MentorMiddleware checks if the user has mentor role
+func MentorMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		if role != "mentor" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Mentor access required"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// SessionTimeoutMiddleware enforces session timeout
+func SessionTimeoutMiddleware(maxSessionDuration time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, exists := c.Get("claims")
+		if !exists {
+			c.Next()
+			return
+		}
+
+		if claimsData, ok := claims.(*Claims); ok {
+			issuedAt := claimsData.IssuedAt.Time
+			if time.Since(issuedAt) > maxSessionDuration {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Session expired, please login again"})
+				c.Abort()
+				return
+			}
+		}
+
+		c.Next()
+	}
+}

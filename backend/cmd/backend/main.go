@@ -21,7 +21,13 @@ func main() {
 	}
 
 	logger.LogInfo("Running database migrations...")
-	err = db.AutoMigrate(&models.User{}, &models.Admin{})
+	err = db.AutoMigrate(
+		&models.User{},
+		&models.Student{},
+		&models.Coordinator{},
+		&models.Mentor{},
+		&models.Company{},
+	)
 	if err != nil {
 		logger.LogFatal(fmt.Sprintf("Failed to run migrations: %v", err))
 	}
