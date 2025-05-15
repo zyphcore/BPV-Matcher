@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: bpv-matcher-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=bpvmatcher
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - bpv-network
+
+networks:
+  bpv-network:
+    driver: bridge
+
+volumes:
+  postgres_data: 
