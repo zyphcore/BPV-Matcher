@@ -16,7 +16,6 @@ func NewStudentHandler() *StudentHandler {
 	return &StudentHandler{}
 }
 
-// GetStudentProfile retrieves the student's detailed profile
 func (h *StudentHandler) GetStudentProfile(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -32,7 +31,6 @@ func (h *StudentHandler) GetStudentProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"student": student})
 }
 
-// UpdateStudentProfile updates the student's detailed profile
 func (h *StudentHandler) UpdateStudentProfile(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -50,7 +48,6 @@ func (h *StudentHandler) UpdateStudentProfile(c *gin.Context) {
 	var student models.Student
 	result := database.GetDB().Where("user_id = ?", userID).First(&student)
 
-	// If student profile doesn't exist, create it
 	if result.Error != nil {
 		student = models.Student{
 			UserID:               uint(userID.(uint)),
@@ -60,7 +57,6 @@ func (h *StudentHandler) UpdateStudentProfile(c *gin.Context) {
 		}
 		result = database.GetDB().Create(&student)
 	} else {
-		// Update existing student profile
 		if updateData.ProgrammingLanguages != "" {
 			student.ProgrammingLanguages = updateData.ProgrammingLanguages
 		}
@@ -81,7 +77,6 @@ func (h *StudentHandler) UpdateStudentProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Student profile updated successfully", "student": student})
 }
 
-// UploadCV handles CV file upload
 func (h *StudentHandler) UploadCV(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -91,16 +86,13 @@ func (h *StudentHandler) UploadCV(c *gin.Context) {
 		return
 	}
 
-	// Generate a file path (in production, you'd want to store this in a secure location)
 	filePath := "uploads/cv/user_" + strconv.FormatUint(uint64(userID.(uint)), 10) + "_" + file.Filename
 
-	// Save the file
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
-	// Update the database with the file path
 	result := database.GetDB().Model(&models.Student{}).Where("user_id = ?", userID).Update("cv", filePath)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update CV file path"})
@@ -110,7 +102,6 @@ func (h *StudentHandler) UploadCV(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "CV uploaded successfully", "filePath": filePath})
 }
 
-// UploadCoverLetter handles cover letter file upload
 func (h *StudentHandler) UploadCoverLetter(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -120,16 +111,13 @@ func (h *StudentHandler) UploadCoverLetter(c *gin.Context) {
 		return
 	}
 
-	// Generate a file path
 	filePath := "uploads/cover_letters/user_" + strconv.FormatUint(uint64(userID.(uint)), 10) + "_" + file.Filename
 
-	// Save the file
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
-	// Update the database with the file path
 	result := database.GetDB().Model(&models.Student{}).Where("user_id = ?", userID).Update("cover_letter", filePath)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update cover letter file path"})
@@ -139,7 +127,6 @@ func (h *StudentHandler) UploadCoverLetter(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Cover letter uploaded successfully", "filePath": filePath})
 }
 
-// UpdateStatus updates the student's application status
 func (h *StudentHandler) UpdateStatus(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -152,7 +139,6 @@ func (h *StudentHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	// Validate status
 	validStatuses := map[string]bool{
 		"inactive":  true,
 		"searching": true,

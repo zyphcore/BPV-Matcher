@@ -17,7 +17,6 @@ func NewMentorHandler() *MentorHandler {
 	return &MentorHandler{}
 }
 
-// GetMentorProfile retrieves the mentor's profile
 func (h *MentorHandler) GetMentorProfile(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -33,7 +32,6 @@ func (h *MentorHandler) GetMentorProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"mentor": mentor})
 }
 
-// GetStudentApplications retrieves student applications
 func (h *MentorHandler) GetStudentApplications(c *gin.Context) {
 	var students []models.Student
 	result := database.GetDB().Where("status = ? OR status = ?", "applied", "searching").Preload("User").Find(&students)
@@ -43,7 +41,6 @@ func (h *MentorHandler) GetStudentApplications(c *gin.Context) {
 		return
 	}
 
-	// Remove sensitive information
 	for i := range students {
 		students[i].User.Password = ""
 	}
@@ -51,7 +48,6 @@ func (h *MentorHandler) GetStudentApplications(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"students": students})
 }
 
-// GetInactiveStudents retrieves inactive students
 func (h *MentorHandler) GetInactiveStudents(c *gin.Context) {
 	var students []models.Student
 	oneMonthAgo := time.Now().AddDate(0, -1, 0)
@@ -68,7 +64,6 @@ func (h *MentorHandler) GetInactiveStudents(c *gin.Context) {
 		return
 	}
 
-	// Remove sensitive information
 	for i := range students {
 		students[i].User.Password = ""
 	}
@@ -76,7 +71,6 @@ func (h *MentorHandler) GetInactiveStudents(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"students": students})
 }
 
-// GetStudentDetails retrieves a specific student's details
 func (h *MentorHandler) GetStudentDetails(c *gin.Context) {
 	studentIDStr := c.Param("id")
 	studentID, err := strconv.ParseUint(studentIDStr, 10, 32)
@@ -97,7 +91,6 @@ func (h *MentorHandler) GetStudentDetails(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"student": student})
 }
 
-// SendNotificationToStudent sends a notification to an inactive student
 func (h *MentorHandler) SendNotificationToStudent(c *gin.Context) {
 	studentIDStr := c.Param("id")
 	studentID, err := strconv.ParseUint(studentIDStr, 10, 32)
@@ -115,11 +108,6 @@ func (h *MentorHandler) SendNotificationToStudent(c *gin.Context) {
 		return
 	}
 
-	// In a real application, you would send an email or push notification
-	// For this example, we'll just return a success message
-
-	// You could also store the notification in a database
-
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Notification sent successfully",
 		"details": gin.H{
@@ -129,9 +117,7 @@ func (h *MentorHandler) SendNotificationToStudent(c *gin.Context) {
 	})
 }
 
-// GetStudentActivityDashboard gets activity data for dashboard
 func (h *MentorHandler) GetStudentActivityDashboard(c *gin.Context) {
-	// Count students by status for the dashboard
 	var stats struct {
 		Total          int64 `json:"total"`
 		Inactive       int64 `json:"inactive"`
@@ -147,7 +133,6 @@ func (h *MentorHandler) GetStudentActivityDashboard(c *gin.Context) {
 	database.GetDB().Model(&models.Student{}).Where("status = ?", "applied").Count(&stats.Applied)
 	database.GetDB().Model(&models.Student{}).Where("status = ?", "placed").Count(&stats.Placed)
 
-	// Count recently active students (logged in within the last week)
 	oneWeekAgo := time.Now().AddDate(0, 0, -7)
 	database.GetDB().
 		Model(&models.User{}).

@@ -38,7 +38,6 @@ func (u *User) CheckPassword(password string) bool {
 	return err == nil
 }
 
-// Helper functions to check user roles
 func (u *User) IsStudent() bool {
 	return u.Role == "student"
 }

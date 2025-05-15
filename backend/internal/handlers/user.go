@@ -36,7 +36,6 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Validate role
 	validRoles := map[string]bool{
 		"student":     true,
 		"coordinator": true,
@@ -71,7 +70,6 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Create role-specific profile
 	switch user.Role {
 	case "student":
 		student := models.Student{
@@ -118,7 +116,6 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Check if user is active
 	if !user.Active {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Your account has been deactivated. Please contact an administrator."})
 		return
@@ -130,7 +127,6 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Update last login time
 	database.GetDB().Model(&user).Update("last_login", time.Now())
 
 	c.JSON(http.StatusOK, gin.H{
@@ -159,7 +155,6 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 
 	user.Password = ""
 
-	// Get role-specific profile data
 	switch role {
 	case "student":
 		var student models.Student

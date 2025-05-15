@@ -11,7 +11,7 @@ type Student struct {
 	ProgrammingLanguages string
 	Preferences          string
 	PortfolioURL         string
-	CV                   string // Path to CV file
-	CoverLetter          string // Path to cover letter file
-	Status               string `gorm:"default:inactive"` // Status: inactive, searching, applied, placed
+	CV                   string
+	CoverLetter          string
+	Status               string `gorm:"default:inactive"`
 }

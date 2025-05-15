@@ -125,7 +125,6 @@ func AdminMiddleware() gin.HandlerFunc {
 	}
 }
 
-// StudentMiddleware checks if the user has student role
 func StudentMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")
@@ -145,7 +144,6 @@ func StudentMiddleware() gin.HandlerFunc {
 	}
 }
 
-// CoordinatorMiddleware checks if the user has coordinator role
 func CoordinatorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")
@@ -165,7 +163,6 @@ func CoordinatorMiddleware() gin.HandlerFunc {
 	}
 }
 
-// MentorMiddleware checks if the user has mentor role
 func MentorMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")
@@ -185,7 +182,6 @@ func MentorMiddleware() gin.HandlerFunc {
 	}
 }
 
-// SessionTimeoutMiddleware enforces session timeout
 func SessionTimeoutMiddleware(maxSessionDuration time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, exists := c.Get("claims")

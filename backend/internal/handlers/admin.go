@@ -49,7 +49,6 @@ func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	// Validate the role
 	validRoles := map[string]bool{
 		"student":     true,
 		"coordinator": true,
@@ -68,17 +67,14 @@ func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	// Store the old role for comparison
 	oldRole := user.Role
 
-	// Update the user's role
 	result = database.GetDB().Model(&user).Update("role", updateData.Role)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role"})
 		return
 	}
 
-	// Create role-specific profile if it doesn't exist
 	if oldRole != updateData.Role {
 		switch updateData.Role {
 		case "student":
@@ -157,10 +153,8 @@ func (h *AdminHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	// Begin a transaction to ensure all related records are deleted
 	tx := database.GetDB().Begin()
 
-	// Delete role-specific profile if it exists
 	var user models.User
 	if tx.First(&user, userID).Error == nil {
 		switch user.Role {
@@ -173,7 +167,6 @@ func (h *AdminHandler) DeleteUser(c *gin.Context) {
 		}
 	}
 
-	// Delete the user
 	result := tx.Delete(&models.User{}, userID)
 	if result.Error != nil {
 		tx.Rollback()
@@ -309,7 +302,6 @@ func (h *AdminHandler) RemoveSpecialPrivileges(c *gin.Context) {
 
 	database.GetDB().Model(&user).Update("role", "student")
 
-	// Create student profile if it doesn't exist
 	var student models.Student
 	if database.GetDB().Where("user_id = ?", userID).First(&student).Error != nil {
 		student = models.Student{UserID: uint(userID)}

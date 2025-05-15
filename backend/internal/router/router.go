@@ -30,26 +30,22 @@ func NewRouter() *gin.Engine {
 		TokenDuration: appConfig.JWTExpiration,
 	}
 
-	// Initialize handlers
 	userHandler := handlers.NewUserHandler(jwtConfig)
 	adminHandler := handlers.NewAdminHandler()
 	studentHandler := handlers.NewStudentHandler()
 	coordinatorHandler := handlers.NewCoordinatorHandler()
 	mentorHandler := handlers.NewMentorHandler()
 
-	// Set up session timeout middleware
 	sessionTimeout := middleware.SessionTimeoutMiddleware(8 * time.Hour)
 
 	router.GET("/health", handlers.HealthCheck)
 
-	// Authentication routes
 	auth := router.Group("/api/auth")
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
 	}
 
-	// Common user routes
 	user := router.Group("/api/user")
 	user.Use(middleware.AuthMiddleware(jwtConfig), sessionTimeout)
 	{
@@ -58,7 +54,6 @@ func NewRouter() *gin.Engine {
 		user.POST("/change-password", userHandler.ChangePassword)
 	}
 
-	// Student-specific routes
 	student := router.Group("/api/student")
 	student.Use(middleware.AuthMiddleware(jwtConfig), middleware.StudentMiddleware(), sessionTimeout)
 	{
@@ -69,7 +64,6 @@ func NewRouter() *gin.Engine {
 		student.PUT("/status", studentHandler.UpdateStatus)
 	}
 
-	// Coordinator-specific routes
 	coordinator := router.Group("/api/coordinator")
 	coordinator.Use(middleware.AuthMiddleware(jwtConfig), middleware.CoordinatorMiddleware(), sessionTimeout)
 	{
@@ -83,7 +77,6 @@ func NewRouter() *gin.Engine {
 		coordinator.GET("/students", coordinatorHandler.GetAllStudents)
 	}
 
-	// Mentor-specific routes
 	mentor := router.Group("/api/mentor")
 	mentor.Use(middleware.AuthMiddleware(jwtConfig), middleware.MentorMiddleware(), sessionTimeout)
 	{
@@ -95,7 +88,6 @@ func NewRouter() *gin.Engine {
 		mentor.GET("/dashboard", mentorHandler.GetStudentActivityDashboard)
 	}
 
-	// Admin routes
 	admin := router.Group("/api/admin")
 	admin.Use(middleware.AuthMiddleware(jwtConfig), middleware.AdminMiddleware(), sessionTimeout)
 	{

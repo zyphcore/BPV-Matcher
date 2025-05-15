@@ -17,7 +17,6 @@ func NewCoordinatorHandler() *CoordinatorHandler {
 	return &CoordinatorHandler{}
 }
 
-// GetCoordinatorProfile retrieves the coordinator's profile
 func (h *CoordinatorHandler) GetCoordinatorProfile(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -33,7 +32,6 @@ func (h *CoordinatorHandler) GetCoordinatorProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"coordinator": coordinator})
 }
 
-// GetCompanies retrieves all companies
 func (h *CoordinatorHandler) GetCompanies(c *gin.Context) {
 	var companies []models.Company
 	result := database.GetDB().Find(&companies)
@@ -45,7 +43,6 @@ func (h *CoordinatorHandler) GetCompanies(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"companies": companies})
 }
 
-// GetCompany retrieves a specific company by ID
 func (h *CoordinatorHandler) GetCompany(c *gin.Context) {
 	companyIDStr := c.Param("id")
 	companyID, err := strconv.ParseUint(companyIDStr, 10, 32)
@@ -68,7 +65,6 @@ func (h *CoordinatorHandler) GetCompany(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"company": company})
 }
 
-// CreateCompany creates a new company
 func (h *CoordinatorHandler) CreateCompany(c *gin.Context) {
 	var company models.Company
 	if err := c.ShouldBindJSON(&company); err != nil {
@@ -85,7 +81,6 @@ func (h *CoordinatorHandler) CreateCompany(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Company created successfully", "company": company})
 }
 
-// UpdateCompany updates a company
 func (h *CoordinatorHandler) UpdateCompany(c *gin.Context) {
 	companyIDStr := c.Param("id")
 	companyID, err := strconv.ParseUint(companyIDStr, 10, 32)
@@ -105,7 +100,6 @@ func (h *CoordinatorHandler) UpdateCompany(c *gin.Context) {
 		return
 	}
 
-	// Bind the update data
 	if err := c.ShouldBindJSON(&company); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -120,7 +114,6 @@ func (h *CoordinatorHandler) UpdateCompany(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Company updated successfully", "company": company})
 }
 
-// UpdateCompanyPartnerStatus updates a company's partner status
 func (h *CoordinatorHandler) UpdateCompanyPartnerStatus(c *gin.Context) {
 	companyIDStr := c.Param("id")
 	companyID, err := strconv.ParseUint(companyIDStr, 10, 32)
@@ -157,9 +150,7 @@ func (h *CoordinatorHandler) UpdateCompanyPartnerStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Company updated to " + status + " successfully"})
 }
 
-// GetStudentStatistics retrieves placement statistics
 func (h *CoordinatorHandler) GetStudentStatistics(c *gin.Context) {
-	// Count students by status
 	var stats struct {
 		Total     int64 `json:"total"`
 		Inactive  int64 `json:"inactive"`
@@ -177,7 +168,6 @@ func (h *CoordinatorHandler) GetStudentStatistics(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"statistics": stats})
 }
 
-// GetAllStudents retrieves all students with their profiles
 func (h *CoordinatorHandler) GetAllStudents(c *gin.Context) {
 	var students []models.Student
 	result := database.GetDB().Preload("User").Find(&students)
@@ -186,7 +176,6 @@ func (h *CoordinatorHandler) GetAllStudents(c *gin.Context) {
 		return
 	}
 
-	// Remove sensitive information
 	for i := range students {
 		students[i].User.Password = ""
 	}
